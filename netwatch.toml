@@ -1,9 +1,0 @@
-web_port = 8080
-agent_port = 7878
-agents = []
-quotas = []
-
-[alert_rules]
-max_rate_mbps = 5.0
-quota_warn_percent = 80
-suspicious_ips = []
