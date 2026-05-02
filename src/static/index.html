@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetWatch — Moniteur Réseau</title>
+  <!-- Membre 7 : styles -->
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR (colonne gauche)
+     Contient : logo, navigation, liste des machines
+     ═══════════════════════════════════════════════════════ -->
+<nav class="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icone">🌐</div>
+    <div>
+      <div class="logo-texte">NetWatch</div>
+      <div class="logo-sous">ENSPD GL4 · 2025–2026</div>
+    </div>
+  </div>
+
+  <!-- Navigation principale -->
+  <div class="nav-section">
+    <div class="nav-section-titre">Principal</div>
+
+    <div class="nav-item actif" data-onglet="dashboard">
+      <span class="icone">📊</span>
+      Dashboard
+    </div>
+
+    <div class="nav-item" data-onglet="alertes">
+      <span class="icone">🔔</span>
+      Alertes
+      <span class="nav-badge" id="badge-alertes"></span>
+    </div>
+
+    <div class="nav-item" data-onglet="reglages">
+      <span class="icone">⚙️</span>
+      Réglages
+    </div>
+  </div>
+
+  <!-- Liste des machines surveillees -->
+  <div class="section-machines">
+    <div class="nav-section-titre">Machines</div>
+
+    <!-- Machine locale (toujours presente) -->
+    <div class="machine-item selectionnee" data-machine="local">
+      <div class="point ligne"></div>
+      <span id="nom-machine-locale">Locale</span>
+    </div>
+
+    <!-- Les agents s ajoutent ici dynamiquement -->
+    <div id="liste-agents"></div>
+  </div>
+
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     ZONE PRINCIPALE (tout ce qui est a droite)
+     ═══════════════════════════════════════════════════════ -->
+<div class="zone-principale">
+
+  <!-- Barre superieure -->
+  <div class="barre-haut">
+    <div class="barre-titre">
+      <h2 id="titre-page">Dashboard</h2>
+      <p id="sous-titre-page">Surveillance réseau en temps réel</p>
+    </div>
+    <div class="barre-droite">
+      <!-- Indicateur de connexion WebSocket -->
+      <div class="ws-indicateur">
+        <div class="ws-point" id="ws-point"></div>
+        <span id="ws-statut">Connexion...</span>
+      </div>
+      <span class="heure-maj" id="heure-maj"></span>
+    </div>
+  </div>
+
+  <!-- Zone de contenu avec defilement -->
+  <div class="contenu">
+
+    <!-- ═══ ONGLET DASHBOARD ══════════════════════════════ -->
+    <div class="panneau actif" id="panneau-dashboard">
+
+      <!-- 4 cartes de statistiques -->
+      <div class="grille-cartes">
+
+        <div class="carte">
+          <div class="carte-icone">↓</div>
+          <div class="carte-label">Réception</div>
+          <div class="carte-valeur" id="carte-rx">–</div>
+          <div class="carte-sous" id="carte-rx-iface">–</div>
+        </div>
+
+        <div class="carte cyan">
+          <div class="carte-icone">↑</div>
+          <div class="carte-label">Envoi</div>
+          <div class="carte-valeur" id="carte-tx">–</div>
+          <div class="carte-sous" id="carte-tx-iface">–</div>
+        </div>
+
+        <div class="carte violet">
+          <div class="carte-icone">⚙</div>
+          <div class="carte-label">Processus actifs</div>
+          <div class="carte-valeur" id="carte-procs">–</div>
+          <div class="carte-sous" id="carte-machine">–</div>
+        </div>
+
+        <div class="carte rouge">
+          <div class="carte-icone">⚠</div>
+          <div class="carte-label">Alertes</div>
+          <div class="carte-valeur" id="carte-alertes">0</div>
+          <div class="carte-sous">Cette session</div>
+        </div>
+
+      </div><!-- /grille-cartes -->
+
+      <!-- Graphique debit + Quotas -->
+      <div class="ligne-2">
+
+        <div class="panel">
+          <div class="panel-entete">
+            <div class="panel-titre">📈 Débit réseau — 60 dernières secondes</div>
+          </div>
+          <!-- Le graphique Chart.js est cree par charts.js -->
+          <div class="zone-graphique">
+            <canvas id="graphique-debit"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-entete">
+            <div class="panel-titre">🎯 Quotas de session</div>
+          </div>
+          <div class="panel-corps" id="panel-quotas">
+            <div class="etat-vide">
+              <div class="emoji">✅</div>
+              <p>Aucun quota configuré<br><small>Ajoutez-en dans Réglages</small></p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /ligne-2 -->
+
+      <!-- Tableau des processus -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-entete">
+          <div class="panel-titre">🔍 Top processus — Consommation réseau</div>
+          <span style="font-size:12px;color:var(--texte-leger)" id="label-machine-proc">–</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tableau">
+            <thead>
+              <tr>
+                <th>Processus</th>
+                <th>PID</th>
+                <th>CPU %</th>
+                <th>RAM</th>
+                <th>↓ Réception/s</th>
+                <th>↑ Envoi/s</th>
+                <th>Niveau</th>
+              </tr>
+            </thead>
+            <tbody id="corps-tableau-proc"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panneau-dashboard -->
+
+    <!-- ═══ ONGLET ALERTES ════════════════════════════════ -->
+    <div class="panneau" id="panneau-alertes">
+      <div class="panel">
+        <div class="panel-entete">
+          <div class="panel-titre">🔔 Alertes en temps réel</div>
+          <button class="btn btn-danger" id="btn-effacer-alertes">Effacer tout</button>
+        </div>
+        <div id="liste-alertes">
+          <div class="etat-vide">
+            <div class="emoji">🎉</div>
+            <p>Aucune alerte — tout va bien !</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ONGLET REGLAGES ═══════════════════════════════ -->
+    <!-- Ce panneau est geree par settings.js (Membre 9) -->
+    <div class="panneau" id="panneau-reglages">
+
+      <!-- Section agents -->
+      <div class="panel section-reglages">
+        <div class="panel-entete">
+          <div class="panel-titre">🖥️ Machines agents</div>
+        </div>
+        <div class="panel-corps">
+          <table class="tableau-reglages">
+            <thead>
+              <tr><th>Nom</th><th>Adresse IP</th><th>Statut</th><th></th></tr>
+            </thead>
+            <tbody id="corps-agents"></tbody>
+          </table>
+          <div class="ligne-formulaire" style="margin-top:14px">
+            <div class="groupe-champ">
+              <label>Nom affiché</label>
+              <input class="champ" id="champ-agent-nom" placeholder="PC-Etudiant-01">
+            </div>
+            <div class="groupe-champ">
+              <label>Adresse IP</label>
+              <input class="champ" id="champ-agent-ip" placeholder="192.168.1.101">
+            </div>
+            <button class="btn btn-bleu" id="btn-ajouter-agent">+ Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section seuils d alerte -->
+      <div class="panel section-reglages">
+        <div class="panel-entete">
+          <div class="panel-titre">⚡ Seuils d'alerte</div>
+        </div>
+        <div class="panel-corps">
+          <div class="groupe-champ" style="margin-bottom:16px">
+            <label>Débit max par processus avant alerte</label>
+            <div class="slider-wrap">
+              <input type="range" id="slider-debit" min="0.1" max="50" step="0.1" value="5">
+              <div class="slider-valeur"><span id="val-debit">5.0</span> MB/s</div>
+            </div>
+          </div>
+          <div class="groupe-champ">
+            <label>Avertissement quota à (%)</label>
+            <div class="slider-wrap">
+              <input type="range" id="slider-quota-pct" min="10" max="99" step="1" value="80">
+              <div class="slider-valeur"><span id="val-quota-pct">80</span> %</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section quotas -->
+      <div class="panel section-reglages">
+        <div class="panel-entete">
+          <div class="panel-titre">🎯 Quotas par machine</div>
+        </div>
+        <div class="panel-corps">
+          <table class="tableau-reglages">
+            <thead>
+              <tr><th>Machine (hostname)</th><th>Limite</th><th>Utilisé</th><th></th></tr>
+            </thead>
+            <tbody id="corps-quotas"></tbody>
+          </table>
+          <div class="ligne-formulaire" style="margin-top:14px">
+            <div class="groupe-champ">
+              <label>Nom de la machine</label>
+              <input class="champ" id="champ-quota-machine" placeholder="PC-Etudiant-01">
+            </div>
+            <div class="groupe-champ">
+              <label>Limite (MB)</label>
+              <input class="champ" type="number" id="champ-quota-limite" placeholder="500" min="1">
+            </div>
+            <button class="btn btn-bleu" id="btn-ajouter-quota">+ Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre de sauvegarde -->
+      <div class="barre-sauvegarde">
+        <span>Sauvegardé dans <code>netwatch.toml</code> — appliqué immédiatement</span>
+        <button class="btn btn-cyan" id="btn-sauvegarder">💾 Sauvegarder</button>
+      </div>
+
+    </div><!-- /panneau-reglages -->
+
+  </div><!-- /contenu -->
+</div><!-- /zone-principale -->
+
+<!-- Toast de notification dans l interface -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     Scripts JavaScript (charges dans l ordre)
+     ═══════════════════════════════════════════════════════ -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script src="/static/charts.js"></script>
+
+<script src="/static/settings.js"></script>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
