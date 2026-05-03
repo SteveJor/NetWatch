@@ -157,3 +157,43 @@ pub fn demarrer_collecte(
         }
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_nouveau_store_vide() {
+        let store = nouveau_store();
+        let donnees = store.read().unwrap();
+        assert_eq!(donnees.len(), 0, "Un nouveau store doit etre vide");
+    }
+
+    #[test]
+    fn test_stat_processus_defaut() {
+        let stat = StatProcessus::default();
+        assert_eq!(stat.pid, 0);
+        assert_eq!(stat.nom, "");
+        assert_eq!(stat.cpu_pct, 0.0);
+    }
+
+    #[test]
+    fn test_taille_historique() {
+        assert_eq!(TAILLE_HISTORIQUE, 60,
+            "L historique doit contenir 60 secondes de donnees");
+    }
+
+    #[test]
+    fn test_snapshot_serialisation() {
+        let snap = Snapshot {
+            horodatage:   1000,
+            machine:      "PC-Test".to_string(),
+            processus:    vec![],
+            interfaces:   vec![],
+            total_rx_bps: 0.0,
+            total_tx_bps: 0.0,
+        };
+        let json = serde_json::to_string(&snap);
+        assert!(json.is_ok(), "Le snapshot doit pouvoir etre converti en JSON");
+    }
+}
