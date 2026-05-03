@@ -4,6 +4,9 @@ const MAX_POINTS = 20;
 // Référence au graphique Chart.js de débit.
 let graphiqueDebit = null;
 
+// Référence au graphique Chart.js de CPU.
+let graphiqueCPU = null;
+
 // Initialise le graphique réseau et retourne l'instance Chart.
 function creerGraphiqueDebit() {
   const contexte = document.getElementById('graphique-debit')?.getContext('2d');
@@ -55,6 +58,46 @@ function creerGraphiqueDebit() {
   return graphiqueDebit;
 }
 
+// Initialise le graphique CPU et retourne l'instance Chart.
+function creerGraphiqueCPU() {
+  const contexte = document.getElementById('graphique-cpu')?.getContext('2d');
+  if (!contexte) return null;
+
+  graphiqueCPU = new Chart(contexte, {
+    type: 'bar',
+    data: {
+      labels: Array(MAX_POINTS).fill(''),
+      datasets: [
+        {
+          label: 'CPU %',
+          data: Array(MAX_POINTS).fill(0),
+          backgroundColor: 'rgba(72, 150, 254, 0.4)',
+          borderColor: '#4896FE',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: true, max: 100 }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: context => `CPU: ${context.formattedValue} %`
+          }
+        }
+      }
+    }
+  });
+
+  return graphiqueCPU;
+}
+
 // Décale les données vers la gauche et ajoute la nouvelle valeur.
 function deplacerDonnees(dataset, valeur) {
   dataset.data.push(valeur);
@@ -71,6 +114,12 @@ function mettreAJourGraphique(donnees = {}) {
     deplacerDonnees(txDataset, donnees.tx);
     graphiqueDebit.update('none');
   }
+
+  if (graphiqueCPU && donnees.cpu != null) {
+    const [cpuDataset] = graphiqueCPU.data.datasets;
+    deplacerDonnees(cpuDataset, donnees.cpu);
+    graphiqueCPU.update('none');
+  }
 }
 
-export { creerGraphiqueDebit, mettreAJourGraphique };
+export { creerGraphiqueDebit, creerGraphiqueCPU, mettreAJourGraphique };
