@@ -1,5 +1,4 @@
 /* ============================================================
-   Membre 7 - Styles du dashboard NetWatch
    Palette : Nexus Brand Guide
    - Fond : #E6EAED / #F1F4F6
    - Bleu  : #4896FE
@@ -28,6 +27,8 @@
 }
 
 /* --- Reset global --- */
+/* On normalise les marges et le modèle de boîte pour tous les éléments.
+   Cela évite des écarts imprévus entre les navigateurs. */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -47,6 +48,8 @@ body {
 /* ============================================================
    SIDEBAR (colonne gauche)
    ============================================================ */
+/* La colonne de gauche reste fixe et contient la navigation,
+   le logo et la liste des machines surveillées. */
 
 .sidebar {
   width: var(--sidebar-larg);
@@ -148,12 +151,13 @@ body {
   cursor: pointer;
   color: var(--texte-leger);
   font-size: 13px;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   margin-bottom: 2px;
 }
 
 .machine-item:hover { background: var(--fond-global); color: var(--texte); }
 .machine-item.selectionnee { background: var(--fond-global); color: var(--texte); font-weight: 500; }
+
 
 /* Point de statut (vert = en ligne, gris = hors ligne) */
 .point {
@@ -165,8 +169,10 @@ body {
 .point.hors   { background: #CBD5E1; }
 
 /* ============================================================
-   ZONE PRINCIPALE (a droite de la sidebar)
+   ZONE PRINCIPALE (à droite de la sidebar)
    ============================================================ */
+/* Le contenu principal affiche les onglets du dashboard, des alertes
+   et des réglages avec un défilement vertical autonome. */
 
 .zone-principale {
   flex: 1;
@@ -199,9 +205,15 @@ body {
   background: var(--fond-global);
   border-radius: 99px;
 }
-.ws-point { width: 7px; height: 7px; border-radius: 50%; background: #CBD5E1; }
-.ws-point.ok    { background: var(--succes); box-shadow: 0 0 5px rgba(16,185,129,0.5); }
-.ws-point.erreur { background: var(--danger); }
+.ws-point { width: 7px; height: 7px; border-radius: 50%; background: #CBD5E1; animation: pulse 2s infinite; }
+.ws-point.ok    { background: var(--succes); box-shadow: 0 0 5px rgba(16,185,129,0.5); animation: none; }
+.ws-point.erreur { background: var(--danger); animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 
 .heure-maj { font-size: 11px; color: var(--texte-leger); }
 
@@ -209,12 +221,24 @@ body {
 .contenu { flex: 1; overflow-y: auto; padding: 20px 24px; }
 
 /* Panneau (onglet) - visible ou cache */
-.panneau { display: none; }
-.panneau.actif { display: block; }
+.panneau {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.panneau.actif {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 /* ============================================================
    CARTES DE STATISTIQUES (4 en haut du dashboard)
    ============================================================ */
+/* Ces cartes montrent un résumé rapide des mesures réseau et des alertes.
+   Elles sont visibles dès l'ouverture du tableau de bord. */
 
 .grille-cartes {
   display: grid;
@@ -231,7 +255,15 @@ body {
   box-shadow: var(--ombre);
   position: relative;
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
+
+.carte:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 
 /* Ligne coloree en haut de chaque carte */
 .carte::after {
@@ -286,6 +318,8 @@ body {
 /* ============================================================
    QUOTAS (barres de progression)
    ============================================================ */
+/* Les quotas montrent l'utilisation des ressources par machine.
+   La barre se remplit en fonction du pourcentage consommé. */
 
 .quota-item { margin-bottom: 16px; }
 .quota-item:last-child { margin-bottom: 0; }
@@ -329,6 +363,8 @@ body {
 /* ============================================================
    TABLEAU DES PROCESSUS
    ============================================================ */
+/* Le tableau liste les processus qui utilisent le réseau.
+   Il facilite l'analyse des PID, du CPU, de la RAM et du trafic. */
 
 .tableau { width: 100%; border-collapse: collapse; font-size: 13px; }
 
@@ -367,6 +403,8 @@ body {
 /* ============================================================
    ONGLET ALERTES
    ============================================================ */
+/* Styles pour la liste des alertes qui s'affiche lorsque des événements
+   critiques ou des avertissements sont détectés en temps réel. */
 
 .alerte-item {
   display: flex;
@@ -400,8 +438,10 @@ body {
 .alerte-type.QuotaDepasse       { background: rgba(239,68,68,0.1);  color: var(--danger); }
 
 /* ============================================================
-   ONGLET REGLAGES
+   ONGLET RÉGLAGES
    ============================================================ */
+/* Styles pour les panneaux de configuration des agents, des seuils
+   et des quotas. Cette zone permet de modifier les paramètres du système. */
 
 .section-reglages { margin-bottom: 16px; }
 
@@ -456,6 +496,8 @@ body {
 .tableau-reglages tr:last-child td { border-bottom: none; }
 
 /* --- Boutons --- */
+/* Les boutons sont utilisés pour les actions principales comme ajouter,
+   sauvegarder ou effacer des alertes. */
 .btn {
   padding: 9px 16px;
   border-radius: 8px;
@@ -467,6 +509,15 @@ body {
   transition: all 0.15s;
   white-space: nowrap;
 }
+
+.btn:hover {
+  transform: scale(1.02);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
 .btn-bleu   { background: var(--bleu);  color: white; }
 .btn-bleu:hover   { background: #2d82fe; }
 .btn-cyan   { background: var(--cyan);  color: white; }

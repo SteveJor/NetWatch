@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NetWatch — Moniteur Réseau</title>
-  <!-- Membre 7 : styles -->
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -25,6 +24,7 @@
   </div>
 
   <!-- Navigation principale -->
+  <!-- Liens internes qui changent l'onglet actif sans recharger la page. -->
   <div class="nav-section">
     <div class="nav-section-titre">Principal</div>
 
@@ -45,7 +45,9 @@
     </div>
   </div>
 
-  <!-- Liste des machines surveillees -->
+  <!-- Liste des machines surveillées -->
+  <!-- Cette section affiche la machine locale et les agents distants.
+       Le contenu peut être rempli dynamiquement par JavaScript. -->
   <div class="section-machines">
     <div class="nav-section-titre">Machines</div>
 
@@ -62,11 +64,13 @@
 </nav>
 
 <!-- ═══════════════════════════════════════════════════════
-     ZONE PRINCIPALE (tout ce qui est a droite)
+     ZONE PRINCIPALE (tout ce qui est à droite)
+     Affiche le contenu de l'onglet sélectionné : dashboard, alertes ou réglages.
      ═══════════════════════════════════════════════════════ -->
 <div class="zone-principale">
 
-  <!-- Barre superieure -->
+  <!-- Barre supérieure -->
+  <!-- Montre le titre de la page, le statut WebSocket et l'heure de mise à jour. -->
   <div class="barre-haut">
     <div class="barre-titre">
       <h2 id="titre-page">Dashboard</h2>
@@ -82,13 +86,16 @@
     </div>
   </div>
 
-  <!-- Zone de contenu avec defilement -->
+  <!-- Zone de contenu avec défilement -->
+  <!-- Toute la zone change selon l'onglet actif, et elle défile si nécessaire. -->
   <div class="contenu">
 
     <!-- ═══ ONGLET DASHBOARD ══════════════════════════════ -->
+    <!-- Panneau principal du tableau de bord avec stats, graphique et processus. -->
     <div class="panneau actif" id="panneau-dashboard">
 
       <!-- 4 cartes de statistiques -->
+      <!-- Résumé rapide des principaux chiffres réseau et système. -->
       <div class="grille-cartes">
 
         <div class="carte">
@@ -121,7 +128,8 @@
 
       </div><!-- /grille-cartes -->
 
-      <!-- Graphique debit + Quotas -->
+      <!-- Graphique débit + Quotas -->
+      <!-- Affiche l'évolution du trafic et l'état des quotas par session. -->
       <div class="ligne-2">
 
         <div class="panel">
@@ -149,6 +157,7 @@
       </div><!-- /ligne-2 -->
 
       <!-- Tableau des processus -->
+      <!-- Liste des processus réseau les plus actifs et leur consommation. -->
       <div class="panel" style="margin-bottom:20px">
         <div class="panel-entete">
           <div class="panel-titre">🔍 Top processus — Consommation réseau</div>
@@ -175,6 +184,7 @@
     </div><!-- /panneau-dashboard -->
 
     <!-- ═══ ONGLET ALERTES ════════════════════════════════ -->
+    <!-- Affiche les alertes actuelles et permet de tout effacer. -->
     <div class="panneau" id="panneau-alertes">
       <div class="panel">
         <div class="panel-entete">
@@ -190,11 +200,13 @@
       </div>
     </div>
 
-    <!-- ═══ ONGLET REGLAGES ═══════════════════════════════ -->
-    <!-- Ce panneau est geree par settings.js (Membre 9) -->
+    <!-- ═══ ONGLET RÉGLAGES ═══════════════════════════════ -->
+    <!-- Ce panneau est géré par settings.js (Membre 9).
+         Il permet de configurer les agents, les seuils et les quotas. -->
     <div class="panneau" id="panneau-reglages">
 
       <!-- Section agents -->
+      <!-- Gestion des machines qui envoient des données de surveillance. -->
       <div class="panel section-reglages">
         <div class="panel-entete">
           <div class="panel-titre">🖥️ Machines agents</div>
@@ -220,7 +232,8 @@
         </div>
       </div>
 
-      <!-- Section seuils d alerte -->
+      <!-- Section seuils d'alerte -->
+      <!-- Réglages pour déclencher des alertes en fonction du débit et des quotas. -->
       <div class="panel section-reglages">
         <div class="panel-entete">
           <div class="panel-titre">⚡ Seuils d'alerte</div>
@@ -244,6 +257,7 @@
       </div>
 
       <!-- Section quotas -->
+      <!-- Définit les limites d'utilisation réseau pour chaque machine. -->
       <div class="panel section-reglages">
         <div class="panel-entete">
           <div class="panel-titre">🎯 Quotas par machine</div>
@@ -280,11 +294,12 @@
   </div><!-- /contenu -->
 </div><!-- /zone-principale -->
 
-<!-- Toast de notification dans l interface -->
+<!-- Toast de notification dans l'interface -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════════
-     Scripts JavaScript (charges dans l ordre)
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Scripts JavaScript (chargés dans l'ordre)
+     Chart.js doit être chargé avant les scripts qui l'utilisent.
      ═══════════════════════════════════════════════════════ -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
