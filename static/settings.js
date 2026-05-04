@@ -365,5 +365,25 @@ function echapper(texte) {
     .replace(/"/g, '&quot;');
 }
 
+// Fonction de test de connexion
+async function testerAgent(ip) {
+    afficherToast('⏳ Test de connexion vers ' + ip + '...');
+    try {
+        const reponse = await fetch('http://' + ip + ':7878/api/ping', {
+            signal: AbortSignal.timeout(3000) // Timeout 3 secondes
+        });
+        if (reponse.ok) {
+            afficherToast('✅ ' + ip + ' répond correctement !');
+        } else {
+            afficherToast('⚠️ ' + ip + ' répond mais avec une erreur');
+        }
+    } catch (e) {
+        afficherToast('❌ ' + ip + ' est inaccessible');
+    }
+}
+
+// Dans afficherAgents(), modifier le bouton :
+// <button onclick="testerAgent('${echapper(agent.ip)}')">Tester</button>
+
 // Rendre echapper() disponible pour app.js
 window.echapper = echapper;
