@@ -1,16 +1,4 @@
-// ============================================================
-//  Membre 10 - Tests unitaires du projet NetWatch
-//
-//  Ce fichier regroupe les tests d integration qui verifient
-//  que les differents modules fonctionnent bien ensemble.
-//
-//  Lancer les tests : cargo test
-//  Lancer avec details : cargo test -- --nocapture
-// ============================================================
 
-// Les tests unitaires de chaque module sont dans leur propre
-// fichier (ex: config.rs a ses propres #[test]).
-// Ce fichier contient les tests d integration.
 
 use crate::alerts::{RegleDebit, RegleQuota, RegleAlerte};
 use crate::collector::Snapshot;
