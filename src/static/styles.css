@@ -1,0 +1,567 @@
+/* ============================================================
+   Palette : Nexus Brand Guide
+   - Fond : #E6EAED / #F1F4F6
+   - Bleu  : #4896FE
+   - Cyan  : #16C8C7
+   - Texte : #1a2332
+   ============================================================ */
+
+/* --- Variables CSS (couleurs et espacements) --- */
+:root {
+  --fond-global:    #E6EAED;
+  --fond-carte:     #FFFFFF;
+  --fond-sidebar:   #FFFFFF;
+  --bleu:           #4896FE;
+  --cyan:           #16C8C7;
+  --bleu-sombre:    #5347CE;
+  --violet-clair:   #887CFD;
+  --texte:          #1a2332;
+  --texte-leger:    #6b7a99;
+  --bordure:        #e2e8f0;
+  --danger:         #EF4444;
+  --warning:        #F59E0B;
+  --succes:         #10B981;
+  --sidebar-larg:   220px;
+  --rayon:          12px;
+  --ombre:          0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* --- Reset global --- */
+/* On normalise les marges et le modèle de boîte pour tous les éléments.
+   Cela évite des écarts imprévus entre les navigateurs. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: var(--fond-global);
+  color: var(--texte);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+/* ============================================================
+   SIDEBAR (colonne gauche)
+   ============================================================ */
+/* La colonne de gauche reste fixe et contient la navigation,
+   le logo et la liste des machines surveillées. */
+
+.sidebar {
+  width: var(--sidebar-larg);
+  background: var(--fond-carte);
+  border-right: 1px solid var(--bordure);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Logo en haut de la sidebar */
+.sidebar-logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--bordure);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icone {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--bleu), var(--cyan));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: white;
+}
+
+.logo-texte {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--texte);
+  letter-spacing: -0.3px;
+}
+
+.logo-sous { font-size: 10px; color: var(--texte-leger); }
+
+/* Sections de navigation */
+.nav-section { padding: 16px 10px 4px; }
+
+.nav-section-titre {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--texte-leger);
+  padding: 0 8px 8px;
+}
+
+/* Elements de navigation cliquables */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--texte-leger);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  user-select: none;
+}
+
+.nav-item:hover { background: var(--fond-global); color: var(--texte); }
+
+.nav-item.actif {
+  background: rgba(72, 150, 254, 0.1);
+  color: var(--bleu);
+}
+
+.nav-item .icone { font-size: 15px; width: 18px; text-align: center; }
+
+/* Badge rouge sur l onglet Alertes */
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: white;
+  border-radius: 99px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  display: none;
+}
+
+/* Liste des machines dans la sidebar */
+.section-machines {
+  padding: 12px 10px;
+  border-top: 1px solid var(--bordure);
+  flex: 1;
+}
+
+.machine-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--texte-leger);
+  font-size: 13px;
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+}
+
+.machine-item:hover { background: var(--fond-global); color: var(--texte); }
+.machine-item.selectionnee { background: var(--fond-global); color: var(--texte); font-weight: 500; }
+
+
+/* Point de statut (vert = en ligne, gris = hors ligne) */
+.point {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.point.ligne  { background: var(--succes); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+.point.hors   { background: #CBD5E1; }
+
+/* ============================================================
+   ZONE PRINCIPALE (à droite de la sidebar)
+   ============================================================ */
+/* Le contenu principal affiche les onglets du dashboard, des alertes
+   et des réglages avec un défilement vertical autonome. */
+
+.zone-principale {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- Barre superieure --- */
+.barre-haut {
+  background: var(--fond-carte);
+  border-bottom: 1px solid var(--bordure);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.barre-titre h2 { font-size: 17px; font-weight: 600; color: var(--texte); }
+.barre-titre p  { font-size: 12px; color: var(--texte-leger); margin-top: 2px; }
+
+.barre-droite { display: flex; align-items: center; gap: 14px; }
+
+/* Indicateur de connexion WebSocket */
+.ws-indicateur {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--texte-leger);
+  padding: 5px 10px;
+  background: var(--fond-global);
+  border-radius: 99px;
+}
+.ws-point { width: 7px; height: 7px; border-radius: 50%; background: #CBD5E1; animation: pulse 2s infinite; }
+.ws-point.ok    { background: var(--succes); box-shadow: 0 0 5px rgba(16,185,129,0.5); animation: none; }
+.ws-point.erreur { background: var(--danger); animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+
+.heure-maj { font-size: 11px; color: var(--texte-leger); }
+
+/* --- Contenu principal (avec defilement) --- */
+.contenu { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+/* Panneau (onglet) - visible ou cache */
+.panneau {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.panneau.actif {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ============================================================
+   CARTES DE STATISTIQUES (4 en haut du dashboard)
+   ============================================================ */
+/* Ces cartes montrent un résumé rapide des mesures réseau et des alertes.
+   Elles sont visibles dès l'ouverture du tableau de bord. */
+
+.grille-cartes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.carte {
+  background: var(--fond-carte);
+  border-radius: var(--rayon);
+  padding: 18px;
+  border: 1px solid var(--bordure);
+  box-shadow: var(--ombre);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.carte:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+
+/* Ligne coloree en haut de chaque carte */
+.carte::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--bleu);
+}
+.carte.cyan::after   { background: var(--cyan); }
+.carte.violet::after { background: var(--bleu-sombre); }
+.carte.rouge::after  { background: var(--danger); }
+
+.carte-icone  { font-size: 22px; margin-bottom: 10px; opacity: 0.8; }
+.carte-label  { font-size: 11px; color: var(--texte-leger); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.carte-valeur { font-size: 24px; font-weight: 700; color: var(--texte); line-height: 1; }
+.carte-valeur small { font-size: 13px; font-weight: 400; color: var(--texte-leger); }
+.carte-sous   { font-size: 11px; color: var(--texte-leger); margin-top: 5px; }
+
+/* ============================================================
+   PANNEAUX (graphique + quota, processus, alertes, reglages)
+   ============================================================ */
+
+.ligne-2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.panel {
+  background: var(--fond-carte);
+  border-radius: var(--rayon);
+  border: 1px solid var(--bordure);
+  box-shadow: var(--ombre);
+  overflow: hidden;
+}
+
+.panel-entete {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--bordure);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-titre { font-size: 13.5px; font-weight: 600; color: var(--texte); }
+.panel-corps  { padding: 16px 18px; }
+
+/* Zone du graphique */
+.zone-graphique { padding: 14px 18px 18px; height: 210px; position: relative; }
+
+/* ============================================================
+   QUOTAS (barres de progression)
+   ============================================================ */
+/* Les quotas montrent l'utilisation des ressources par machine.
+   La barre se remplit en fonction du pourcentage consommé. */
+
+.quota-item { margin-bottom: 16px; }
+.quota-item:last-child { margin-bottom: 0; }
+
+.quota-entete {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+.quota-nom   { font-weight: 500; }
+.quota-valeur { color: var(--texte-leger); }
+
+.barre-fond {
+  background: var(--fond-global);
+  border-radius: 99px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.barre-rempli {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--bleu), var(--cyan));
+  transition: width 0.6s ease;
+}
+.barre-rempli.avertissement { background: linear-gradient(90deg, #D97706, var(--warning)); }
+.barre-rempli.depasse       { background: linear-gradient(90deg, #DC2626, var(--danger)); }
+
+.quota-actions { display: flex; justify-content: flex-end; margin-top: 5px; }
+.btn-reset {
+  font-size: 11px;
+  color: var(--bleu);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-reset:hover { text-decoration: underline; }
+
+/* ============================================================
+   TABLEAU DES PROCESSUS
+   ============================================================ */
+/* Le tableau liste les processus qui utilisent le réseau.
+   Il facilite l'analyse des PID, du CPU, de la RAM et du trafic. */
+
+.tableau { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+.tableau th {
+  text-align: left;
+  padding: 8px 14px;
+  color: var(--texte-leger);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid var(--bordure);
+  white-space: nowrap;
+}
+
+.tableau td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  vertical-align: middle;
+}
+.tableau tr:last-child td { border-bottom: none; }
+.tableau tr:hover td { background: rgba(72,150,254,0.03); }
+
+/* Badge de niveau de consommation */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge.eleve  { background: rgba(239,68,68,0.1);  color: var(--danger); }
+.badge.moyen  { background: rgba(72,150,254,0.1); color: var(--bleu); }
+.badge.faible { background: var(--fond-global);   color: var(--texte-leger); }
+
+/* ============================================================
+   ONGLET ALERTES
+   ============================================================ */
+/* Styles pour la liste des alertes qui s'affiche lorsque des événements
+   critiques ou des avertissements sont détectés en temps réel. */
+
+.alerte-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--bordure);
+  animation: apparaitre 0.2s ease;
+}
+@keyframes apparaitre {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.alerte-item:last-child { border-bottom: none; }
+
+.alerte-icone { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.alerte-corps { flex: 1; }
+.alerte-msg   { font-size: 13px; font-weight: 500; color: var(--texte); }
+.alerte-meta  { font-size: 11px; color: var(--texte-leger); margin-top: 2px; }
+
+.alerte-type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  align-self: center;
+}
+.alerte-type.DebitEleve         { background: rgba(239,68,68,0.1);  color: var(--danger); }
+.alerte-type.AvertissementQuota { background: rgba(245,158,11,0.1); color: var(--warning); }
+.alerte-type.QuotaDepasse       { background: rgba(239,68,68,0.1);  color: var(--danger); }
+
+/* ============================================================
+   ONGLET RÉGLAGES
+   ============================================================ */
+/* Styles pour les panneaux de configuration des agents, des seuils
+   et des quotas. Cette zone permet de modifier les paramètres du système. */
+
+.section-reglages { margin-bottom: 16px; }
+
+.groupe-champ { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.groupe-champ label { font-size: 12px; font-weight: 500; color: var(--texte-leger); }
+
+.champ {
+  padding: 9px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--texte);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.champ:focus { border-color: var(--bleu); box-shadow: 0 0 0 3px rgba(72,150,254,0.1); }
+
+.ligne-formulaire {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: flex-end;
+}
+
+/* Slider de reglage */
+.slider-wrap { display: flex; align-items: center; gap: 12px; }
+.slider-wrap input[type=range] {
+  flex: 1;
+  accent-color: var(--bleu);
+  height: 4px;
+}
+.slider-valeur { font-weight: 600; font-size: 14px; color: var(--bleu); min-width: 65px; }
+
+/* Tableau des agents / quotas dans les reglages */
+.tableau-reglages { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tableau-reglages th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--texte-leger);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--bordure);
+}
+.tableau-reglages td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.tableau-reglages tr:last-child td { border-bottom: none; }
+
+/* --- Boutons --- */
+/* Les boutons sont utilisés pour les actions principales comme ajouter,
+   sauvegarder ou effacer des alertes. */
+.btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  transform: scale(1.02);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-bleu   { background: var(--bleu);  color: white; }
+.btn-bleu:hover   { background: #2d82fe; }
+.btn-cyan   { background: var(--cyan);  color: white; }
+.btn-cyan:hover   { background: #11b0af; }
+.btn-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+/* Barre de sauvegarde en bas de l onglet reglages */
+.barre-sauvegarde {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid var(--bordure);
+  padding: 13px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.barre-sauvegarde span { font-size: 12px; color: var(--texte-leger); }
+
+/* --- Toast (notification dans l interface) --- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--texte);
+  color: white;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s;
+  z-index: 1000;
+  max-width: 320px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.toast.visible { opacity: 1; transform: translateY(0); }
+
+/* --- Etat vide (aucune donnee) --- */
+.etat-vide {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--texte-leger);
+}
+.etat-vide .emoji { font-size: 36px; margin-bottom: 10px; }
+.etat-vide p { font-size: 13px; }
