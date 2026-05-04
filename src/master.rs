@@ -1,35 +1,3 @@
-// ============================================================
-//  Membre 6 - Serveur Maître
-//
-//  Ce module orchestre tout le système en mode « maître » :
-//  1. Collecte les statistiques locales
-//  2. Interroge les agents toutes les secondes
-//  3. Analyse les alertes
-//  4. Sert le tableau de bord web
-//  5. Pousse les données en temps réel via WebSocket
-//
-//  Rôle architectural :
-//  ---------------------
-//  Le serveur maître est le point central du système NetWatch.
-//  Il agrège les données provenant de la machine locale et de
-//  l'ensemble des agents distants configurés, puis les expose
-//  via une interface web accessible depuis un navigateur.
-//
-//  Concurrence :
-//  -------------
-//  Toutes les tâches de fond (interrogation des agents, alertes,
-//  compteur de quota) s'exécutent en parallèle grâce au runtime
-//  asynchrone Tokio. L'état partagé est protégé par des verrous
-//  en lecture/écriture (RwLock) afin d'éviter les accès concurrents
-//  non contrôlés.
-//
-//  Communication avec le tableau de bord :
-//  ----------------------------------------
-//  Les données sont poussées vers le navigateur via WebSocket
-//  à raison d'une mise à jour par seconde. Aucune action côté
-//  client n'est nécessaire pour rafraîchir l'affichage.
-// ============================================================
-
 use crate::alerts::{self, Alerte};
 use crate::collector::{self, SharedStore, Snapshot};
 use crate::config::Config;
@@ -51,36 +19,27 @@ use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 
 // ============================================================
-//  État global partagé entre toutes les tâches async
+//  Etat global partage entre toutes les taches async
 // ============================================================
 
-// --- Structure principale du tableau de bord ---
-// Toutes les informations affichées sur le tableau de bord sont
-// regroupées ici. Cette structure est sérialisable en JSON afin
-// d'être envoyée directement au navigateur via WebSocket.
-/// Toutes les données affichées sur le dashboard
+/// Toutes les donnees affichees sur le dashboard
 #[derive(Debug, Clone, Serialize, Default)]
 struct EtatDashboard {
     /// Dernier snapshot de la machine locale
     local: Option<Snapshot>,
-    /// État de chaque agent (nom -> statut)
+    /// Etat de chaque agent (nom -> statut)
     agents: HashMap<String, StatutAgent>,
-    /// Les 100 dernières alertes
+    /// Les 100 dernieres alertes
     alertes: Vec<Alerte>,
-    /// État des quotas par machine
+    /// Etat des quotas par machine
     quotas: HashMap<String, EtatQuota>,
-    /// Historique du débit entrant (60 points)
+    /// Historique du debit entrant (60 points)
     historique_rx: Vec<f64>,
-    /// Historique du débit sortant (60 points)
+    /// Historique du debit sortant (60 points)
     historique_tx: Vec<f64>,
 }
 
-// --- Statut d'un agent distant ---
-// Chaque agent interrogé dispose d'un statut indiquant s'il est
-// joignable et, le cas échéant, son dernier snapshot réseau.
-// Le champ `en_ligne` vaut false dès qu'une requête HTTP échoue
-// ou dépasse le délai d'attente configuré (2 secondes).
-/// Statut d'un agent distant
+/// Statut d un agent distant
 #[derive(Debug, Clone, Serialize)]
 struct StatutAgent {
     nom:      String,
@@ -89,11 +48,7 @@ struct StatutAgent {
     snapshot: Option<Snapshot>,
 }
 
-// --- État du quota d'une machine ---
-// Utilisé pour suivre la consommation réseau cumulée d'une machine
-// par rapport à la limite configurée. Le pourcentage `pct` est
-// plafonné à 100 pour éviter les débordements d'affichage.
-/// État du quota d'une machine
+/// Etat du quota d une machine
 #[derive(Debug, Clone, Serialize)]
 pub struct EtatQuota {
     pub machine:    String,
@@ -102,11 +57,7 @@ pub struct EtatQuota {
     pub pct:        u64,
 }
 
-// --- Conteneur d'état de l'application ---
-// Cette structure est clonée et transmise à chaque route HTTP et
-// à chaque tâche asynchrone. Le clonage est peu coûteux car tous
-// les champs sont des Arc (pointeurs à comptage de références).
-/// Contient toutes les structures partagées entre les tâches
+/// Contient toutes les structures partagees entre les taches
 #[derive(Clone)]
 struct EtatApp {
     store:           SharedStore,
@@ -116,14 +67,9 @@ struct EtatApp {
 }
 
 // ============================================================
-//  Point d'entrée du mode maître
+//  Point d entree du mode maitre
 // ============================================================
 
-// --- Fonction principale du mode maître ---
-// Cette fonction asynchrone initialise toutes les ressources
-// partagées, démarre les tâches de fond, enregistre les routes
-// HTTP et met le serveur web en écoute sur le port configuré.
-// Elle se termine proprement à la réception du signal Ctrl+C.
 pub async fn lancer() {
     let config     = Config::charger();
     let port_web   = config.port_web;
@@ -132,18 +78,18 @@ pub async fn lancer() {
     let dashboard  = Arc::new(RwLock::new(EtatDashboard::default()));
     let quota_octets: Arc<RwLock<HashMap<String, u64>>> = Arc::new(RwLock::new(HashMap::new()));
 
-    // Canal d'arrêt pour le collecteur local
+    // Canal d arret pour le collecteur local
     let (signal_tx, signal_rx) = mpsc::channel::<()>();
     let _collecteur = collector::demarrer_collecte(store.clone(), signal_rx);
 
     let etat = EtatApp { store, config, dashboard, quota_octets };
 
-    // Lancer les tâches asynchrones en parallèle
+    // Lancer les taches asynchrones en parallele
     tokio::spawn(tache_interroger_agents(etat.clone()));
     tokio::spawn(tache_alertes(etat.clone()));
     tokio::spawn(tache_compteur_quota(etat.clone()));
 
-    // Définir les routes HTTP
+    // Definir les routes HTTP
     let app = Router::new()
         .route("/",                  get(servir_dashboard))
         .route("/static/styles.css",  get(servir_css))
@@ -158,20 +104,17 @@ pub async fn lancer() {
 
     let adresse = format!("0.0.0.0:{}", port_web);
     let listener = TcpListener::bind(&adresse).await
-        .unwrap_or_else(|_| panic!("Impossible d'écouter sur le port {}", port_web));
+        .unwrap_or_else(|_| panic!("Impossible d ecouter sur le port {}", port_web));
 
     afficher_banniere(port_web);
     ouvrir_navigateur(port_web);
 
-    // Attente de la fin du serveur ou du signal d'arrêt Ctrl+C.
-    // L'opérateur select! garantit que l'un ou l'autre des deux
-    // futurs sera traité dès qu'il sera résolu en premier.
     tokio::select! {
         res = axum::serve(listener, app) => {
-            if let Err(e) = res { eprintln!("[maître] Erreur : {}", e); }
+            if let Err(e) = res { eprintln!("[maitre] Erreur : {}", e); }
         }
         _ = tokio::signal::ctrl_c() => {
-            println!("\n[maître] Arrêt...");
+            println!("\\n[maitre] Arret...");
             signal_tx.send(()).ok();
         }
     }
@@ -180,12 +123,6 @@ pub async fn lancer() {
 // ============================================================
 //  Routes - Fichiers statiques (HTML, CSS, JS)
 // ============================================================
-
-// --- Service des fichiers statiques ---
-// Les fichiers HTML, CSS et JavaScript sont compilés directement
-// dans le binaire à l'aide de la macro `include_str!`. Cela
-// simplifie le déploiement : aucun répertoire externe n'est requis.
-// Chaque route renvoie le type MIME approprié dans l'en-tête HTTP.
 
 async fn servir_dashboard() -> Html<&'static str> {
     Html(include_str!("../static/index.html"))
@@ -208,27 +145,17 @@ async fn servir_settings_js() -> ([(&'static str, &'static str); 1], &'static st
 }
 
 // ============================================================
-//  WebSocket - Envoi des données en temps réel
+//  WebSocket - Envoi des donnees en temps reel
 // ============================================================
 
-// --- Gestionnaire de la connexion WebSocket ---
-// Lorsqu'un navigateur ouvre une connexion WebSocket sur /ws,
-// Axum appelle ce gestionnaire qui délègue immédiatement à la
-// boucle de push. Le mécanisme de mise à niveau (upgrade) est
-// géré de manière transparente par la bibliothèque Axum.
 async fn handler_websocket(ws: WebSocketUpgrade, State(etat): State<EtatApp>) -> Response {
     ws.on_upgrade(|socket| boucle_push(socket, etat))
 }
 
-// --- Boucle de push WebSocket ---
-// Cette fonction tourne indéfiniment pour un client donné.
-// À chaque itération, elle sérialise l'état courant du tableau
-// de bord en JSON et l'envoie via la socket. Si l'envoi échoue
-// (client déconnecté), la boucle se termine proprement.
-/// Boucle qui envoie l'état du dashboard toutes les secondes
+/// Boucle qui envoie l etat du dashboard toutes les secondes
 async fn boucle_push(mut socket: WebSocket, etat: EtatApp) {
     loop {
-        // Lire l'état courant
+        // Lire l etat courant
         let payload = {
             let dash = etat.dashboard.read().unwrap();
             serde_json::to_string(&*dash).unwrap_or_default()
@@ -236,7 +163,7 @@ async fn boucle_push(mut socket: WebSocket, etat: EtatApp) {
 
         // Envoyer au navigateur
         if socket.send(Message::Text(payload)).await.is_err() {
-            break; // Client déconnecté
+            break; // Client deconnecte
         }
 
         // Attendre 1 seconde
@@ -245,17 +172,10 @@ async fn boucle_push(mut socket: WebSocket, etat: EtatApp) {
 }
 
 // ============================================================
-//  Tâches asynchrones - tournent en permanence en arrière-plan
+//  Taches asynchrones - tournent en permanence en arriere-plan
 // ============================================================
 
-// --- Tâche d'interrogation des agents ---
-// Cette tâche s'exécute en boucle infinie et contacte chaque agent
-// distant via une requête HTTP GET sur leur point d'accès /api/snapshot.
-// Un délai d'attente de 2 secondes est appliqué à chaque requête.
-// Si un agent ne répond pas dans ce délai, il est marqué hors ligne
-// (`en_ligne: false`) mais reste visible dans le tableau de bord.
-// L'état du tableau de bord est mis à jour à l'issue de chaque cycle.
-/// Interroge tous les agents configurés et met à jour le dashboard
+/// Interroge tous les agents configured et met a jour le dashboard
 async fn tache_interroger_agents(etat: EtatApp) {
     // Client HTTP avec timeout de 2 secondes
     let client = reqwest::Client::builder()
@@ -289,7 +209,7 @@ async fn tache_interroger_agents(etat: EtatApp) {
             });
         }
 
-        // Mettre à jour le dashboard
+        // Mettre a jour le dashboard
         {
             let local = etat.store.read().unwrap().back().cloned();
             let (hist_rx, hist_tx) = {
@@ -310,15 +230,7 @@ async fn tache_interroger_agents(etat: EtatApp) {
     }
 }
 
-// --- Tâche d'évaluation des alertes ---
-// À chaque seconde, cette tâche récupère le dernier snapshot local,
-// calcule la consommation quota en mégaoctets, puis évalue l'ensemble
-// des règles d'alerte définies dans la configuration. Si une ou
-// plusieurs règles sont franchies, une notification système est
-// émise et les alertes sont ajoutées à la liste du tableau de bord
-// (limitée aux 100 dernières). L'état des quotas est également
-// recalculé et mis à jour à l'issue de chaque évaluation.
-/// Évalue les règles d'alerte et émet les notifications
+/// Evalue les regles d alerte et emet les notifications
 async fn tache_alertes(etat: EtatApp) {
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
@@ -332,7 +244,7 @@ async fn tache_alertes(etat: EtatApp) {
                 qo.get(&snap.machine).copied().unwrap_or(0) / 1_000_000
             };
 
-            // Évaluer toutes les règles
+            // Evaluer toutes les regles
             let regles = alerts::creer_regles(&config);
             let nouvelles: Vec<Alerte> = regles.iter()
                 .flat_map(|r| r.evaluer(&snap, quota_mb))
@@ -350,7 +262,7 @@ async fn tache_alertes(etat: EtatApp) {
                 }
             }
 
-            // Mettre à jour l'état des quotas
+            // Mettre a jour l etat des quotas
             let qo = etat.quota_octets.read().unwrap();
             let mut quotas = HashMap::new();
             for quota_cfg in &config.quotas {
@@ -372,13 +284,7 @@ async fn tache_alertes(etat: EtatApp) {
     }
 }
 
-// --- Tâche de comptabilisation des quotas ---
-// Cette tâche additionne chaque seconde le volume de données
-// transitant sur la machine locale (RX + TX en octets/s) au
-// compteur cumulé de la machine concernée. Ce compteur sert de
-// base au calcul du pourcentage d'utilisation du quota dans la
-// tâche d'alertes. Il peut être remis à zéro via l'API REST.
-/// Comptabilise les octets consommés par machine pour les quotas
+/// Comptabilise les bytes consommes par machine pour les quotas
 async fn tache_compteur_quota(etat: EtatApp) {
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
@@ -395,18 +301,10 @@ async fn tache_compteur_quota(etat: EtatApp) {
 //  Routes API - Configuration et quotas
 // ============================================================
 
-// --- API de lecture de la configuration ---
-// Retourne la configuration courante sous forme JSON.
-// Utilisée par l'interface de paramétrage du tableau de bord.
 async fn api_lire_config(State(etat): State<EtatApp>) -> Json<Config> {
     Json(etat.config.read().unwrap().clone())
 }
 
-// --- API de sauvegarde de la configuration ---
-// Reçoit une nouvelle configuration au format JSON, l'applique
-// immédiatement en mémoire et la persiste sur disque via la
-// méthode `sauvegarder()`. Retourne un objet JSON indiquant
-// le succès ou l'échec de l'opération.
 async fn api_sauvegarder_config(
     State(etat): State<EtatApp>,
     Json(nouvelle_config): Json<Config>,
@@ -415,19 +313,13 @@ async fn api_sauvegarder_config(
     *etat.config.write().unwrap() = nouvelle_config;
     Json(serde_json::json!({
         "ok":      ok,
-        "message": if ok { "Configuration sauvegardée" } else { "Erreur de sauvegarde" }
+        "message": if ok { "Configuration sauvegardee" } else { "Erreur de sauvegarde" }
     }))
 }
 
-// --- Corps de la requête de remise à zéro d'un quota ---
-// Structure désérialisée depuis le corps JSON de la requête POST.
 #[derive(Deserialize)]
 struct CorpsResetQuota { machine: String }
 
-// --- API de remise à zéro d'un quota ---
-// Supprime l'entrée du compteur d'octets pour la machine spécifiée,
-// ce qui remet effectivement son quota à zéro. La prochaine évaluation
-// des règles d'alerte reflétera immédiatement cette remise à zéro.
 async fn api_reset_quota(
     State(etat): State<EtatApp>,
     Json(corps): Json<CorpsResetQuota>,
@@ -440,11 +332,6 @@ async fn api_reset_quota(
 //  Utilitaires
 // ============================================================
 
-// --- Ouverture automatique du navigateur ---
-// Lance un thread dédié qui attend 800 ms (le temps que le serveur
-// soit prêt) puis ouvre l'URL du tableau de bord dans le navigateur
-// par défaut du système. La commande utilisée est adaptée selon
-// le système d'exploitation cible (Linux, Windows, macOS).
 fn ouvrir_navigateur(port: u16) {
     let url = format!("http://localhost:{}", port);
     std::thread::spawn(move || {
@@ -458,11 +345,6 @@ fn ouvrir_navigateur(port: u16) {
     });
 }
 
-// --- Envoi d'une notification système ---
-// Utilise la bibliothèque `notify_rust` pour afficher une notification
-// native sur le bureau de l'utilisateur. Chaque notification s'exécute
-// dans un thread séparé afin de ne pas bloquer la boucle asynchrone.
-// Le délai d'affichage est fixé à 5 secondes.
 fn envoyer_notification(titre: &str, corps: &str) {
     let corps = corps.to_string();
     let titre = titre.to_string();
@@ -475,14 +357,11 @@ fn envoyer_notification(titre: &str, corps: &str) {
     });
 }
 
-// --- Affichage de la bannière de démarrage ---
-// Affiche dans le terminal un encadré récapitulatif indiquant l'URL
-// d'accès au tableau de bord et le raccourci clavier d'arrêt.
 fn afficher_banniere(port: u16) {
     println!("╔══════════════════════════════════════════╗");
-    println!("║       NetWatch — Mode MAÎTRE             ║");
+    println!("║       NetWatch — Mode MAITRE             ║");
     println!("╠══════════════════════════════════════════╣");
     println!("║  Dashboard : http://localhost:{:<5}      ║", port);
-    println!("║  Ctrl+C pour arrêter                     ║");
+    println!("║  Ctrl+C pour arreter                     ║");
     println!("╚══════════════════════════════════════════╝");
 }

@@ -1,0 +1,8 @@
+port_web = 3000
+port_agent = 7878
+agents = []
+quotas = []
+
+[alertes]
+debit_max_mbps = 0.1
+avertissement_quota_pct = 80

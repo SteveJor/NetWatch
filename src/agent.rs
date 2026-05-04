@@ -1,17 +1,3 @@
-// ============================================================
-//  Membre 5 - Serveur HTTP Agent
-//
-//  Ce module lance NetWatch en mode "agent" :
-//  il collecte les statistiques locales et les expose
-//  via une API HTTP que le serveur maitre peut interroger.
-//
-//  Routes disponibles :
-//    GET /api/snapshot  -> dernier instantane (JSON)
-//    GET /api/historique-> 60 derniers instantanes (JSON)
-//    GET /api/ping      -> test de connexion
-//    GET /api/info      -> version et OS (Nouveau)[cite: 1, 3]
-// ============================================================
-
 use crate::collector;
 use crate::collector::{SharedStore, Snapshot};
 use crate::config::Config;
@@ -46,7 +32,6 @@ pub async fn lancer() {
         .route("/api/snapshot",   get(route_snapshot))
         .route("/api/historique", get(route_historique))
         .route("/api/ping",       get(route_ping))
-        .route("/api/info",       get(route_info))
         .with_state(store); // Injecter le store dans tous les handlers
 
     // Demarrer le serveur
@@ -95,16 +80,6 @@ async fn route_historique(State(store): State<SharedStore>) -> Json<Vec<Snapshot
 /// GET /api/ping -> simple test de connectivite
 async fn route_ping() -> &'static str {
     "pong"
-}
-
-
-/// GET /api/info -> retourne version, OS et architecture (Ajout Membre 5)
-async fn route_info() -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "version": "1.0.0",
-        "os":      std::env::consts::OS,
-        "arch":    std::env::consts::ARCH,
-    }))
 }
 
 // ============================================================

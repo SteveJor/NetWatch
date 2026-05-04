@@ -150,3 +150,4 @@ pub fn creer_regles(config: &Config) -> Vec<Box<dyn RegleAlerte>> {
 
     regles
 }
+

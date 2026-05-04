@@ -1,5 +1,3 @@
-
-
 use crate::alerts::{RegleDebit, RegleQuota, RegleAlerte};
 use crate::collector::Snapshot;
 use crate::config::{Config, ReglesAlerte};
